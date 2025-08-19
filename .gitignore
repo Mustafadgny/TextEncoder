@@ -1,0 +1,18 @@
+# Python
+__pycache__/
+*.pyc
+
+# Virtual Environment
+venv/
+env/
+
+# IDE/Editor dosyaları
+.idea/
+.vscode/
+
+# Veritabanı dosyası
+*.sqlite3
+db.sqlite3
+
+# Hassas bilgiler (varsa)
+.env

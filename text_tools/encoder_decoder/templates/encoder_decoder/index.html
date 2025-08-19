@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Text Encoder / Decoder</title>
+    <style>
+        :root {
+            --primary-color: #0d6efd;
+            --light-gray: #f8f9fa;
+            --border-color: #dee2e6;
+            --text-color: #212529;
+            --body-bg: #f0f2f5;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: var(--body-bg);
+            color: var(--text-color);
+            margin: 0;
+            padding: 2rem;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 720px;
+            background: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+
+        h1 {
+            font-size: 1.75rem;
+            margin-top: 0;
+            margin-bottom: 1.5rem;
+        }
+
+        .tab-nav {
+            display: flex;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 1.5rem;
+        }
+
+        .tab-link {
+            padding: 0.75rem 1rem;
+            border: none;
+            background: none;
+            cursor: pointer;
+            font-size: 1rem;
+            color: #6c757d;
+            text-decoration: none;
+            border-bottom: 3px solid transparent;
+            margin-bottom: -1px;
+        }
+
+        .tab-link.active {
+            color: var(--primary-color);
+            border-bottom-color: var(--primary-color);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .form-group {
+            margin-bottom: 1.25rem;
+        }
+
+        label {
+            display: block;
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        textarea, select {
+            width: 100%;
+            padding: 0.75rem;
+            font-size: 1rem;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            background-color: #fff;
+            box-sizing: border-box;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 120px;
+        }
+
+        .action-button {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            font-size: 1rem;
+            font-weight: 500;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .action-button:hover {
+            background-color: #0b5ed7;
+        }
+
+        .result-section {
+            margin-top: 2rem;
+        }
+
+        .result-box {
+            background-color: var(--light-gray);
+            padding: 1rem;
+            border-radius: 6px;
+            font-family: "SF Mono", "Menlo", "Monaco", "Consolas", monospace;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            min-height: 40px;
+            border: 1px solid var(--border-color);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Text Encoder / Decoder</h1>
+
+        <div class="tab-nav">
+            <a href="?mode=encode" class="tab-link {% if mode == 'encode' or not mode %}active{% endif %}">Encode</a>
+            <a href="?mode=decode" class="tab-link {% if mode == 'decode' %}active{% endif %}">Decode</a>
+        </div>
+
+        <!-- Encode -->
+        <div id="encode-content" class="tab-content {% if mode == 'encode' or not mode %}active{% endif %}">
+            <form method="post">
+                {% csrf_token %}
+                <input type="hidden" name="mode" value="encode">
+                <div class="form-group">
+                    <label for="text-to-encode">Text to Encode</label>
+                    <textarea name="input_text" id="text-to-encode" required>{{ input_text }}</textarea>
+                </div>
+                <div class="form-group">
+                    <label for="encoding-method">Encoding Method</label>
+                    <select name="operation" id="encoding-method">
+                        <option value="b64_encode" {% if selected_operation == 'b64_encode' %}selected{% endif %}>Base64</option>
+                        <option value="rot13" {% if selected_operation == 'rot13' %}selected{% endif %}>ROT13</option>
+                        <option value="aes_encode" {% if selected_operation == 'aes_encode' %}selected{% endif %}>AES </option>
+                        <option value="rsa_encode" {% if selected_operation == 'rsa_encode' %}selected{% endif %}>RSA </option>
+                        <option value="binary_encode" {% if selected_operation == 'binary_encode' %}selected{% endif %}>Text to Binary</option>
+                    </select>
+                </div>
+                <button type="submit" class="action-button">Encode</button>
+            </form>
+        </div>
+
+        <!-- Decode Bölümü -->
+        <div id="decode-content" class="tab-content {% if mode == 'decode' %}active{% endif %}">
+            <form method="post">
+                {% csrf_token %}
+                <input type="hidden" name="mode" value="decode">
+                <div class="form-group">
+                    <label for="text-to-decode">Text to Decode</label>
+                    <textarea name="input_text" id="text-to-decode" required>{{ input_text }}</textarea>
+                </div>
+                <div class="form-group">
+                    <label for="decoding-method">Decoding Method</label>
+                    <select name="operation" id="decoding-method">
+                        <option value="b64_decode" {% if selected_operation == 'b64_decode' %}selected{% endif %}>Base64</option>
+                        <option value="rot13" {% if selected_operation == 'rot13' %}selected{% endif %}>ROT13</option>
+                        <option value="aes_decode" {% if selected_operation == 'aes_decode' %}selected{% endif %}>AES Decryption</option>
+                        <option value="rsa_decode" {% if selected_operation == 'rsa_decode' %}selected{% endif %}>RSA Decryption</option>
+                        <option value="binary_decode" {% if selected_operation == 'binary_decode' %}selected{% endif %}>Binary to Text</option>
+                    </select>
+                </div>
+                <button type="submit" class="action-button">Decode</button>
+            </form>
+        </div>
+
+        <!-- Hata Mesajı -->
+        {% if error %}
+            <div class="result-section">
+                <p style="color: #dc3545; font-weight: bold;">{{ error }}</p>
+            </div>
+        {% endif %}
+
+        <!-- Sonuç Bölümü -->
+        {% if output_text %}
+        <div class="result-section">
+            <h3>{% if mode == 'decode' %}Decoded Result{% else %}Encoded Result{% endif %}</h3>
+            <div class="result-box">{{ output_text }}</div>
+        </div>
+        {% endif %}
+    </div>
+
+</body>
+</html>
